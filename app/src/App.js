@@ -1,11 +1,17 @@
 import Home from "./Components/Home";
+import GenerateFacts from "./Components/GenerateFacts";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+
 
 
 function App() {
   return (
-    <div className="App">
-       <Home />
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" exact element={<Home />} />
+        <Route path="/generate-facts" element={<GenerateFacts />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 

@@ -24,20 +24,7 @@ const [voices, setVoices] = useState([]);
 const [femaleVoice, setFemaleVoice] = useState(null);
 
 
-
-  useEffect(() => {
-    if (listening) {
-      startListening();
-    } else {
-      startListening();
-    }
-
-    if( bot_respond == "prince" )
-      alert("prince");
-    else if( bot_respond == "moving to sofia" ){
-      window.open('https://palmapi-67c47.web.app/');
-      setBotrespond("");
-    }
+  useEffect(()=>{
 
     const loadVoices = () => {
       const availableVoices = synth.getVoices();
@@ -52,6 +39,15 @@ const [femaleVoice, setFemaleVoice] = useState(null);
     // Load voices initially
     loadVoices();
 
+  },[])
+
+  useEffect(() => {
+    if (listening) {
+      startListening();
+    } else {
+      startListening();
+    }
+
   }, [listening , bot_respond]);
 
 
@@ -65,6 +61,17 @@ const [femaleVoice, setFemaleVoice] = useState(null);
           const currentTranscript = event.results[event.results.length - 1][0].transcript.toLowerCase();
           setTranscript(currentTranscript);
           setUserInput(currentTranscript);
+
+          if(  currentTranscript.includes("close tab")  ){
+    
+            setUserInput("close tab");
+            handleSubmit( "close tab");
+          }
+          if( currentTranscript.includes("switch") ){
+            setUserInput("switch");
+            handleSubmit( "switch");
+          }
+
         
         };
         recognition.start();
@@ -128,7 +135,7 @@ const [femaleVoice, setFemaleVoice] = useState(null);
 
   
   
-  const handleSubmit = async()=>{
+  const handleSubmit = async(user_input)=>{
 
     console.log("button click")
 
@@ -136,17 +143,33 @@ const [femaleVoice, setFemaleVoice] = useState(null);
     
     var ans = '';
 
-    if( user_input == 'skip') {
+    if( user_input === 'skip') {
       ans = user_input;
       setUserans(null);
     }
-    else if( user_ans != null ){
+    else if( user_ans !== null ){
       setUserInput( `ans is-${user_ans} - ${user_input}`)
       ans = `ans is-${user_ans} - ${user_input}`;
       setUserans(null);
     }
+    else if( user_input.includes("on youtube") ){
+      const query = user_input.replace(/on youtube/gi, '');
+      const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+      window.open(searchUrl, '_blank');
+      setUserInput("");
+      return ;
+    }
+    else if( user_input.includes("search") ){
+      const query = user_input.replace(/search/gi, '');
+      const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+      window.open(searchUrl, '_blank');
+      setUserInput("");
+      return ;
+    }
     else{
       ans = user_input;
+      if( ans == "")
+        return ;
     }
 
     await fetch('http://127.0.0.1:5000/chat', {
@@ -167,13 +190,19 @@ const [femaleVoice, setFemaleVoice] = useState(null);
           ...newData, // Add new data
           ...prevDataArray  // Preserve previous data
         }));
-
+        
+        speak( data.response );
    
         if( data.response == "ok give me answer"){
             setUserans( user_input );
             console.log("ok give me anserrrrr")
         }
-        speak( data.response );
+        else if( data.response.includes("moving to sofia") ){
+          window.open('https://palmapi-67c47.web.app/');
+          setBotrespond("");
+        }
+
+        
         setBotrespond( data.response );
       })
       .catch(error => {
@@ -185,6 +214,11 @@ const [femaleVoice, setFemaleVoice] = useState(null);
 
   const handleChange = (e) => {
     setUserInput(e.target.value);
+  };
+
+  const handleFormSubmit = (e , str) => {
+    e.preventDefault();
+    handleSubmit(user_input);
   };
   
   return (
@@ -198,12 +232,12 @@ const [femaleVoice, setFemaleVoice] = useState(null);
           </div>
         ))}
       </div>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleFormSubmit}>
         <input type="text" value={user_input} onChange={handleChange}
           onKeyPress={(e) => {
             if (e.key === 'Enter') {
               e.preventDefault();
-              handleSubmit();
+              handleFormSubmit(e);
             }
           }}
           placeholder='input' />
